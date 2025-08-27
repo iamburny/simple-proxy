@@ -47,6 +47,33 @@ app.all('/proxy', async (req, res) => {
     // Remove host and other headers that shouldn't be forwarded
     delete config.headers.host;
     delete config.headers['content-length'];
+    
+    // Fix AutoTrader-specific headers
+    if (url.includes('autotrader.co.uk')) {
+      // Ensure Origin points to AutoTrader for same-origin requests
+      if (config.headers.origin && config.headers.origin.includes('proxy.burny.uk')) {
+        config.headers.origin = 'https://www.autotrader.co.uk';
+      }
+      
+      // Fix Sec-Fetch-Site to appear as same-origin
+      if (config.headers['sec-fetch-site'] === 'cross-origin') {
+        config.headers['sec-fetch-site'] = 'same-origin';
+      }
+      
+      // Ensure referer points to AutoTrader domain if it was pointing to proxy
+      if (config.headers.referer && config.headers.referer.includes('proxy.burny.uk')) {
+        config.headers.referer = config.headers.referer.replace(
+          /https:\/\/proxy\.burny\.uk\/proxy\?url=[^&]+/,
+          'https://www.autotrader.co.uk'
+        );
+      }
+      
+      console.log('Fixed AutoTrader headers:', {
+        origin: config.headers.origin,
+        referer: config.headers.referer,
+        'sec-fetch-site': config.headers['sec-fetch-site']
+      });
+    }
 
     // Add request body for POST, PUT, PATCH requests
     if (['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase())) {
@@ -62,17 +89,18 @@ app.all('/proxy', async (req, res) => {
     }
 
     console.log(`Proxying ${req.method} request to: ${url}`);
+    console.log('Request headers:', JSON.stringify(config.headers, null, 2));
 
     // Make the proxied request
     const response = await axios(config);
 
     // Forward response headers (excluding some that shouldn't be forwarded)
     const headersToExclude = [
-      'content-encoding',
-      'content-length',
-      'transfer-encoding',
+      'content-length', // Let Express handle this
+      'transfer-encoding', // Let Express handle this  
       'connection',
       'keep-alive',
+      'server', // Don't expose target server info
     ];
 
     Object.keys(response.headers).forEach((key) => {
