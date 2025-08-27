@@ -59,52 +59,10 @@ app.all('/proxy', async (req, res) => {
     delete config.headers.host;
     delete config.headers['content-length'];
 
-    // Fix AutoTrader-specific headers and add browser-like behavior
-    if (url.includes('autotrader.co.uk')) {
-      // Ensure Origin points to AutoTrader for same-origin requests
-      if (
-        config.headers.origin &&
-        config.headers.origin.includes('proxy.burny.uk')
-      ) {
-        config.headers.origin = 'https://www.autotrader.co.uk';
-      }
-
-      // Fix Sec-Fetch-Site to appear as same-origin
-      if (config.headers['sec-fetch-site'] === 'cross-origin') {
-        config.headers['sec-fetch-site'] = 'same-origin';
-      }
-
-      // Ensure referer points to AutoTrader domain if it was pointing to proxy
-      if (
-        config.headers.referer &&
-        config.headers.referer.includes('proxy.burny.uk')
-      ) {
-        config.headers.referer = config.headers.referer.replace(
-          /https:\/\/proxy\.burny\.uk\/proxy\?url=[^&]+/,
-          'https://www.autotrader.co.uk'
-        );
-      }
-
-      // Add missing browser headers that might be expected
-      if (!config.headers['sec-ch-ua']) {
-        config.headers['sec-ch-ua'] =
-          '"Chromium";v="120", "Not(A:Brand";v="24", "Google Chrome";v="120"';
-      }
-      if (!config.headers['sec-ch-ua-mobile']) {
-        config.headers['sec-ch-ua-mobile'] = '?0';
-      }
-      if (!config.headers['sec-ch-ua-platform']) {
-        config.headers['sec-ch-ua-platform'] = '"macOS"';
-      }
-
-      // Add browser-like connection behavior
-      config.headers['connection'] = 'keep-alive';
-
-      console.log('Fixed AutoTrader headers:', {
-        origin: config.headers.origin,
-        referer: config.headers.referer,
-        'sec-fetch-site': config.headers['sec-fetch-site'],
-      });
+    // TEMPORARILY DISABLED: Fix AutoTrader-specific headers 
+    // Testing if special handling is causing 502 errors in production
+    if (false && url.includes('autotrader.co.uk')) {
+      console.log('🚫 AutoTrader special handling DISABLED for testing');
     }
 
     // Add request body for POST, PUT, PATCH requests
