@@ -58,6 +58,14 @@ app.all('/proxy', async (req, res) => {
     // Remove host and other headers that shouldn't be forwarded
     delete config.headers.host;
     delete config.headers['content-length'];
+    
+    // Remove proxy-revealing headers that AutoTrader detects and blocks
+    delete config.headers['x-forwarded-for'];
+    delete config.headers['x-forwarded-host'];
+    delete config.headers['x-forwarded-port'];
+    delete config.headers['x-forwarded-proto'];
+    delete config.headers['x-forwarded-server'];
+    delete config.headers['x-real-ip'];
 
     // AutoTrader-specific debugging and minimal handling
     if (url.includes('autotrader.co.uk')) {
@@ -153,7 +161,7 @@ app.all('/proxy', async (req, res) => {
     console.error('\n=== PROXY ERROR ===');
     console.error('Error message:', error.message);
     console.error('Error code:', error.code);
-    console.error('Request URL:', url);
+    console.error('Request URL:', config.url);
 
     if (error.response) {
       // The request was made and the server responded with a status code
@@ -169,10 +177,10 @@ app.all('/proxy', async (req, res) => {
       );
 
       // Special logging for AutoTrader errors
-      if (url.includes('autotrader.co.uk')) {
+      if (config.url.includes('autotrader.co.uk')) {
         console.error('🚨 AUTOTRADER ERROR DETAILS:');
         console.error('Request method:', req.method);
-        console.error('Final URL:', url);
+        console.error('Final URL:', config.url);
         console.error(
           'Request headers sent:',
           JSON.stringify(config.headers, null, 2)
