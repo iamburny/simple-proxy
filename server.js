@@ -67,33 +67,16 @@ app.all('/proxy', async (req, res) => {
     delete config.headers['x-forwarded-server'];
     delete config.headers['x-real-ip'];
 
-    // AutoTrader-specific debugging and minimal handling
+    // AutoTrader-specific handling
     if (url.includes('autotrader.co.uk')) {
-      console.log('🔍 AutoTrader request detected');
-      console.log('URL:', url);
-      console.log('User-Agent:', config.headers['user-agent']);
-      console.log('Origin:', config.headers.origin);
-
-      // Add minimal browser-like headers (only the essential ones)
-      try {
-        if (
-          !config.headers['user-agent'] ||
-          config.headers['user-agent'].includes('curl')
-        ) {
-          config.headers['user-agent'] =
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-          console.log('✅ Added browser User-Agent');
-        }
-
-        // Only add Origin if it's missing and we're making a POST request
-        if (req.method === 'POST' && !config.headers.origin) {
-          config.headers.origin = 'https://www.autotrader.co.uk';
-          console.log('✅ Added Origin header for POST request');
-        }
-
-        console.log('🚀 Proceeding with AutoTrader request...');
-      } catch (error) {
-        console.error('⚠️ Error in AutoTrader processing:', error.message);
+      // Add minimal browser-like headers for compatibility
+      if (!config.headers['user-agent'] || config.headers['user-agent'].includes('curl')) {
+        config.headers['user-agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+      }
+      
+      // Add Origin header for POST requests
+      if (req.method === 'POST' && !config.headers.origin) {
+        config.headers.origin = 'https://www.autotrader.co.uk';
       }
     }
 
@@ -110,35 +93,8 @@ app.all('/proxy', async (req, res) => {
       config.params = queryParams;
     }
 
-    console.log(`\n=== PROXY REQUEST START ===`);
-    console.log(`${req.method} ${url}`);
-    console.log(
-      'Original request headers:',
-      JSON.stringify(req.headers, null, 2)
-    );
-    console.log(
-      'Final config headers:',
-      JSON.stringify(config.headers, null, 2)
-    );
-
-    if (req.body && Object.keys(req.body).length > 0) {
-      console.log(
-        'Request body:',
-        JSON.stringify(req.body, null, 2).substring(0, 500)
-      );
-    }
-
     // Make the proxied request
-    console.log(`Making axios request to: ${config.url}`);
     const response = await axios(config);
-    console.log(`Axios request successful: ${response.status}`);
-
-    console.log(`Response status: ${response.status} ${response.statusText}`);
-    console.log('Response headers:', JSON.stringify(response.headers, null, 2));
-    console.log(
-      `Response data length: ${JSON.stringify(response.data).length}`
-    );
-    console.log('=== PROXY REQUEST END ===\n');
 
     // Forward response headers (excluding some that shouldn't be forwarded)
     const headersToExclude = [
@@ -158,38 +114,10 @@ app.all('/proxy', async (req, res) => {
     // Return the response
     res.status(response.status).send(response.data);
   } catch (error) {
-    console.error('\n=== PROXY ERROR ===');
-    console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Request URL:', config.url);
+    console.error(`Proxy error: ${req.method} ${config.url} - ${error.message}`);
 
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('Error response status:', error.response.status);
-      console.error(
-        'Error response headers:',
-        JSON.stringify(error.response.headers, null, 2)
-      );
-      console.error(
-        'Error response data:',
-        JSON.stringify(error.response.data).substring(0, 500)
-      );
-
-      // Special logging for AutoTrader errors
-      if (config.url.includes('autotrader.co.uk')) {
-        console.error('🚨 AUTOTRADER ERROR DETAILS:');
-        console.error('Request method:', req.method);
-        console.error('Final URL:', config.url);
-        console.error(
-          'Request headers sent:',
-          JSON.stringify(config.headers, null, 2)
-        );
-        console.error('CloudFlare Ray ID:', error.response.headers['cf-ray']);
-        console.error('Server response:', error.response.headers['server']);
-      }
-
-      console.error('=== PROXY ERROR END ===\n');
+      console.error(`Response: ${error.response.status} ${error.response.statusText}`);
 
       res.status(error.response.status).json({
         error: 'Proxy request failed',
