@@ -23,7 +23,7 @@ app.all('/debug', (req, res) => {
     headers: req.headers,
     query: req.query,
     body: req.body,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -107,19 +107,30 @@ app.all('/proxy', async (req, res) => {
 
     console.log(`\n=== PROXY REQUEST START ===`);
     console.log(`${req.method} ${url}`);
-    console.log('Original request headers:', JSON.stringify(req.headers, null, 2));
-    console.log('Final config headers:', JSON.stringify(config.headers, null, 2));
-    
+    console.log(
+      'Original request headers:',
+      JSON.stringify(req.headers, null, 2)
+    );
+    console.log(
+      'Final config headers:',
+      JSON.stringify(config.headers, null, 2)
+    );
+
     if (req.body && Object.keys(req.body).length > 0) {
-      console.log('Request body:', JSON.stringify(req.body, null, 2).substring(0, 500));
+      console.log(
+        'Request body:',
+        JSON.stringify(req.body, null, 2).substring(0, 500)
+      );
     }
 
     // Make the proxied request
     const response = await axios(config);
-    
+
     console.log(`Response status: ${response.status} ${response.statusText}`);
     console.log('Response headers:', JSON.stringify(response.headers, null, 2));
-    console.log(`Response data length: ${JSON.stringify(response.data).length}`);
+    console.log(
+      `Response data length: ${JSON.stringify(response.data).length}`
+    );
     console.log('=== PROXY REQUEST END ===\n');
 
     // Forward response headers (excluding some that shouldn't be forwarded)
@@ -149,10 +160,16 @@ app.all('/proxy', async (req, res) => {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       console.error('Error response status:', error.response.status);
-      console.error('Error response headers:', JSON.stringify(error.response.headers, null, 2));
-      console.error('Error response data:', JSON.stringify(error.response.data).substring(0, 500));
+      console.error(
+        'Error response headers:',
+        JSON.stringify(error.response.headers, null, 2)
+      );
+      console.error(
+        'Error response data:',
+        JSON.stringify(error.response.data).substring(0, 500)
+      );
       console.error('=== PROXY ERROR END ===\n');
-      
+
       res.status(error.response.status).json({
         error: 'Proxy request failed',
         status: error.response.status,
