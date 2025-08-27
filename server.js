@@ -58,7 +58,7 @@ app.all('/proxy', async (req, res) => {
     // Remove host and other headers that shouldn't be forwarded
     delete config.headers.host;
     delete config.headers['content-length'];
-    
+
     // Remove proxy-revealing headers that AutoTrader detects and blocks
     delete config.headers['x-forwarded-for'];
     delete config.headers['x-forwarded-host'];
