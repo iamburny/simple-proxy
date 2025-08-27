@@ -59,10 +59,30 @@ app.all('/proxy', async (req, res) => {
     delete config.headers.host;
     delete config.headers['content-length'];
 
-    // TEMPORARILY DISABLED: Fix AutoTrader-specific headers 
-    // Testing if special handling is causing 502 errors in production
-    if (false && url.includes('autotrader.co.uk')) {
-      console.log('🚫 AutoTrader special handling DISABLED for testing');
+        // AutoTrader-specific debugging and minimal handling
+    if (url.includes('autotrader.co.uk')) {
+      console.log('🔍 AutoTrader request detected');
+      console.log('URL:', url);
+      console.log('User-Agent:', config.headers['user-agent']);
+      console.log('Origin:', config.headers.origin);
+      
+      // Add minimal browser-like headers (only the essential ones)
+      try {
+        if (!config.headers['user-agent'] || config.headers['user-agent'].includes('curl')) {
+          config.headers['user-agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+          console.log('✅ Added browser User-Agent');
+        }
+        
+        // Only add Origin if it's missing and we're making a POST request
+        if (req.method === 'POST' && !config.headers.origin) {
+          config.headers.origin = 'https://www.autotrader.co.uk';
+          console.log('✅ Added Origin header for POST request');
+        }
+        
+        console.log('🚀 Proceeding with AutoTrader request...');
+      } catch (error) {
+        console.error('⚠️ Error in AutoTrader processing:', error.message);
+      }
     }
 
     // Add request body for POST, PUT, PATCH requests
@@ -143,6 +163,17 @@ app.all('/proxy', async (req, res) => {
         'Error response data:',
         JSON.stringify(error.response.data).substring(0, 500)
       );
+      
+      // Special logging for AutoTrader errors
+      if (url.includes('autotrader.co.uk')) {
+        console.error('🚨 AUTOTRADER ERROR DETAILS:');
+        console.error('Request method:', req.method);
+        console.error('Final URL:', url);
+        console.error('Request headers sent:', JSON.stringify(config.headers, null, 2));
+        console.error('CloudFlare Ray ID:', error.response.headers['cf-ray']);
+        console.error('Server response:', error.response.headers['server']);
+      }
+      
       console.error('=== PROXY ERROR END ===\n');
 
       res.status(error.response.status).json({
