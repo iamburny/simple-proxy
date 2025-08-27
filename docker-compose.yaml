@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   proxy:
@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '8030:80'
+      - "8030:80"
     environment:
       - PORT=80
       - NODE_ENV=production
@@ -14,9 +14,9 @@ services:
     healthcheck:
       test:
         [
-          'CMD',
-          'node',
-          '-e',
+          "CMD",
+          "node",
+          "-e",
           "require('http').get('http://localhost:80/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))",
         ]
       interval: 30s
@@ -24,22 +24,22 @@ services:
       retries: 3
       start_period: 40s
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
     networks:
-        - home
+      - home
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=home"
-      - "traefik.http.routers.burny.entrypoints=https"
-      - "traefik.http.routers.burny.rule=Host(`proxy.burny.uk`)"
-      - "traefik.http.routers.burny.tls=true"
-      - "traefik.http.routers.burny.tls.certresolver=myresolver"
-      - "traefik.http.services.burny.loadbalancer.server.port=80"
+      - "traefik.http.routers.simple-proxy.entrypoints=https"
+      - "traefik.http.routers.simple-proxy.rule=Host(`proxy.burny.uk`)"
+      - "traefik.http.routers.simple-proxy.tls=true"
+      - "traefik.http.routers.simple-proxy.tls.certresolver=myresolver"
+      - "traefik.http.services.simple-proxy.loadbalancer.server.port=80"
 
 networks:
-    home:
-      name: home
-      external: true
+  home:
+    name: home
+    external: true
