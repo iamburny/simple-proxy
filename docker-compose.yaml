@@ -39,8 +39,17 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=home"
+      # HTTPS router (main service)
       - "traefik.http.routers.simple-proxy.entrypoints=https"
       - "traefik.http.routers.simple-proxy.rule=Host(`proxy.burny.uk`)"
       - "traefik.http.routers.simple-proxy.tls=true"
       - "traefik.http.routers.simple-proxy.tls.certresolver=myresolver"
+      # HTTP router (redirect to HTTPS)
+      - "traefik.http.routers.simple-proxy-http.entrypoints=http"
+      - "traefik.http.routers.simple-proxy-http.rule=Host(`proxy.burny.uk`)"
+      - "traefik.http.routers.simple-proxy-http.middlewares=simple-proxy-redirect"
+      # Redirect middleware
+      - "traefik.http.middlewares.simple-proxy-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.simple-proxy-redirect.redirectscheme.permanent=true"
+      # Service configuration
       - "traefik.http.services.simple-proxy.loadbalancer.server.port=80"
