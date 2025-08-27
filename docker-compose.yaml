@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '80:80'
+      - '8030:80'
     environment:
       - PORT=80
       - NODE_ENV=production
@@ -23,14 +23,23 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - proxy-network
     logging:
       driver: 'json-file'
       options:
         max-size: '10m'
         max-file: '3'
+    networks:
+        - home
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=home"
+      - "traefik.http.routers.burny.entrypoints=https"
+      - "traefik.http.routers.burny.rule=Host(`proxy.burny.uk`)"
+      - "traefik.http.routers.burny.tls=true"
+      - "traefik.http.routers.burny.tls.certresolver=myresolver"
+      - "traefik.http.services.burny.loadbalancer.server.port=80"
 
 networks:
-  proxy-network:
-    driver: bridge
+    home:
+      name: home
+      external: true
