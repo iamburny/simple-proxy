@@ -59,7 +59,7 @@ app.all('/proxy', async (req, res) => {
     delete config.headers.host;
     delete config.headers['content-length'];
 
-    // Fix AutoTrader-specific headers
+    // Fix AutoTrader-specific headers and add browser-like behavior
     if (url.includes('autotrader.co.uk')) {
       // Ensure Origin points to AutoTrader for same-origin requests
       if (
@@ -85,10 +85,29 @@ app.all('/proxy', async (req, res) => {
         );
       }
 
+      // Add missing browser headers that might be expected
+      if (!config.headers['sec-ch-ua']) {
+        config.headers['sec-ch-ua'] = '"Chromium";v="120", "Not(A:Brand";v="24", "Google Chrome";v="120"';
+      }
+      if (!config.headers['sec-ch-ua-mobile']) {
+        config.headers['sec-ch-ua-mobile'] = '?0';
+      }
+      if (!config.headers['sec-ch-ua-platform']) {
+        config.headers['sec-ch-ua-platform'] = '"macOS"';
+      }
+
+      // Add browser-like connection behavior
+      config.headers['connection'] = 'keep-alive';
+      
+      // Add random delay to mimic human behavior (100-500ms)
+      const delay = Math.floor(Math.random() * 400) + 100;
+      await new Promise(resolve => setTimeout(resolve, delay));
+
       console.log('Fixed AutoTrader headers:', {
         origin: config.headers.origin,
         referer: config.headers.referer,
         'sec-fetch-site': config.headers['sec-fetch-site'],
+        'delay_ms': delay
       });
     }
 
