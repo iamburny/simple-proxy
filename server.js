@@ -52,7 +52,7 @@ app.all('/proxy', async (req, res) => {
       method: req.method,
       url: url,
       headers: { ...req.headers },
-      timeout: 30000, // 30 seconds timeout
+      timeout: 60000, // 60 seconds timeout for AutoTrader
     };
 
     // Remove host and other headers that shouldn't be forwarded
@@ -100,15 +100,10 @@ app.all('/proxy', async (req, res) => {
       // Add browser-like connection behavior
       config.headers['connection'] = 'keep-alive';
 
-      // Add random delay to mimic human behavior (100-500ms)
-      const delay = Math.floor(Math.random() * 400) + 100;
-      await new Promise((resolve) => setTimeout(resolve, delay));
-
       console.log('Fixed AutoTrader headers:', {
         origin: config.headers.origin,
         referer: config.headers.referer,
         'sec-fetch-site': config.headers['sec-fetch-site'],
-        delay_ms: delay,
       });
     }
 
@@ -144,7 +139,9 @@ app.all('/proxy', async (req, res) => {
     }
 
     // Make the proxied request
+    console.log(`Making axios request to: ${config.url}`);
     const response = await axios(config);
+    console.log(`Axios request successful: ${response.status}`);
 
     console.log(`Response status: ${response.status} ${response.statusText}`);
     console.log('Response headers:', JSON.stringify(response.headers, null, 2));
