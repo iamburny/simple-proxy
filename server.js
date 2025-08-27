@@ -70,10 +70,14 @@ app.all('/proxy', async (req, res) => {
     // AutoTrader-specific handling
     if (url.includes('autotrader.co.uk')) {
       // Add minimal browser-like headers for compatibility
-      if (!config.headers['user-agent'] || config.headers['user-agent'].includes('curl')) {
-        config.headers['user-agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+      if (
+        !config.headers['user-agent'] ||
+        config.headers['user-agent'].includes('curl')
+      ) {
+        config.headers['user-agent'] =
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
       }
-      
+
       // Add Origin header for POST requests
       if (req.method === 'POST' && !config.headers.origin) {
         config.headers.origin = 'https://www.autotrader.co.uk';
@@ -114,10 +118,14 @@ app.all('/proxy', async (req, res) => {
     // Return the response
     res.status(response.status).send(response.data);
   } catch (error) {
-    console.error(`Proxy error: ${req.method} ${config.url} - ${error.message}`);
+    console.error(
+      `Proxy error: ${req.method} ${config.url} - ${error.message}`
+    );
 
     if (error.response) {
-      console.error(`Response: ${error.response.status} ${error.response.statusText}`);
+      console.error(
+        `Response: ${error.response.status} ${error.response.statusText}`
+      );
 
       res.status(error.response.status).json({
         error: 'Proxy request failed',
