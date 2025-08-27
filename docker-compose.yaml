@@ -4,11 +4,11 @@ networks:
     external: true
 
 services:
-  proxy:
+  simple-proxy:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: proxy
+    container_name: simple-proxy
     environment:
       - NODE_ENV=production
       - PORT=80
@@ -32,14 +32,13 @@ services:
         max-file: "3"
     ports:
       - "8030:80"
-    restart: always
     networks:
       - home
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=home"
-      - "traefik.http.routers.proxy.entrypoints=https"
-      - "traefik.http.routers.proxy.rule=Host(`proxy.burny.uk`)"
-      - "traefik.http.routers.proxy.tls=true"
-      - "traefik.http.routers.proxy.tls.certresolver=myresolver"
-      - "traefik.http.services.proxy.loadbalancer.server.port=80"
+      - "traefik.http.routers.simple-proxy.entrypoints=https"
+      - "traefik.http.routers.simple-proxy.rule=Host(`proxy.burny.uk`)"
+      - "traefik.http.routers.simple-proxy.tls=true"
+      - "traefik.http.routers.simple-proxy.tls.certresolver=myresolver"
+      - "traefik.http.services.simple-proxy.loadbalancer.server.port=80"
